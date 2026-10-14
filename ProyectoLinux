@@ -1,0 +1,43 @@
+sudo apt update
+sudo apt install iputils-ping traceroute net-tools
+
+nano diagnostico_red.sh
+
+#!/bin/bash
+ 
+# Definición del array con los hosts a evaluar
+HOSTS=("8.8.8.8" "1.1.1.1" "google.com" "github.com")
+ 
+# Generar nombre del archivo de informe con fecha y hora actual
+FECHA=$(date +"%Y-%m-%d_%H-%M-%S")
+INFORME="informe_red_${FECHA}.txt"
+ 
+echo "========================================" > "$INFORME"
+echo "    INFORME DE DIAGNÓSTICO DE RED       " >> "$INFORME"
+echo "    Fecha: $(date)                      " >> "$INFORME"
+echo "========================================" >> "$INFORME"
+ 
+# Bucle para recorrer el array de hosts
+for host in "${HOSTS[@]}"; do
+    echo -e "\n[*] Analizando: $host" | tee -a "$INFORME"
+    
+    echo "--- PING (3 paquetes) ---" >> "$INFORME"
+    ping -c 3 "$host" >> "$INFORME" 2>&1
+    
+    echo "--- TRACEROUTE (máx 10 saltos) ---" >> "$INFORME"
+    traceroute -m 10 "$host" >> "$INFORME" 2>&1
+    
+    echo "----------------------------------------" >> "$INFORME"
+done
+ 
+# Sección de conexiones de red activas con netstat
+echo -e "\n[*] Estado de conexiones locales (NETSTAT):" | tee -a "$INFORME"
+netstat -tuln >> "$INFORME" 2>&1
+ 
+echo -e "\n[✔] Proceso finalizado. El informe se guardó en: $INFORME"
+
+chmod +x diagnostico_red.sh
+ ./diagnostico_red.sh
+
+ cat informe_red_*.txt
+ 
